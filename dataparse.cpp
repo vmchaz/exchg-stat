@@ -15,7 +15,6 @@
 using namespace std;
     
 uint64_t cKW[3] = {0x2262696473223a, 0x2261736b73223a, 0x657374616d70223a};
-uint64_t cKWMask[3] = {0xffffffffffffff, 0xffffffffffffff, 0xffffffffffffffff};
 
 
 void read_array(char * buffer, char ** ppbuf, int * start, int * length)
@@ -98,7 +97,8 @@ void parse_response(char * response, char ** timestamp_start, int * timestamp_le
     int l_start = 0;
     int l_end = 0;
     int l_len = 0;
-    while(c != 0)
+    int l_flags = 0;
+    while ((c != 0) && (l_flags != 7))
     {
         w = ((w << 8) | c) & 0xffffffffffffff;
         if (w == 0x2262696473223a)
@@ -106,18 +106,21 @@ void parse_response(char * response, char ** timestamp_start, int * timestamp_le
             read_array(response, &p, &l_start, &l_len);
             *bids_start = response + l_start;
             *bids_len = l_len;
+            l_flags |= 4;
         } else 
         if (w == 0x2261736b73223a)
         {
             read_array(response, &p, &l_start, &l_len);
             *asks_start = response + l_start;
             *asks_len = l_len;
+            l_flags |= 2;
         }
         else if (w == 0x7374616d70223a)
         {            
             read_int(response, &p, &l_start, &l_len);
             *timestamp_start = response + l_start;
             *timestamp_len = l_len;
+            l_flags |= 1;
         }
         ++p;
         c = *p;

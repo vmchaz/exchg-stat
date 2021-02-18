@@ -35,6 +35,6 @@ int ssl_connect(ConnectionRec * cr, char * address);
 int ssl_send_request(ConnectionRec * cr);
 int ssl_receive_response(ConnectionRec * cr, RoundBufferRec * rb);
 void ssl_shutdown(ConnectionRec * cr);
-
+void init_strings();
 
 #endif

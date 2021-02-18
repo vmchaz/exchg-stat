@@ -36,6 +36,7 @@ int main(int argc, char const *argv[])
 
     cout << "Bids and asks from " << address << " are stored in " << filename << " each " << save_interval << " second(s)"<< std::endl << "Press Ctrl+C to exit" << std::endl;
     
+    init_strings();
     ds = initialize_data_store(filename);
     if (open_file(ds) != 0)
     {
@@ -78,8 +79,6 @@ int main(int argc, char const *argv[])
         
         sleep(save_interval);
     }
-    
-    ssl_shutdown(c);
     
     return 0;
 }

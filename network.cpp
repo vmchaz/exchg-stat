@@ -27,11 +27,23 @@ using namespace std;
 int PORT = 443;
 
 char cCL[100] = "Content-Length:";
+uint64_t cCL1 = 0;
+uint32_t cCL2 = 0;
+
+
+char cRequest[1000] = "GET /api/v2/public/get_order_book?instrument_name=BTC-PERPETUAL HTTP/1.1\r\n"
+    "Host: test.deribit.com\r\n"
+    "Accept: application/json\r\n"
+    "\r\n\r\n";
+int cRequestLen = 0;
 
 
 void parse_line(char * line, int len, uint32_t & content_length)
 {
-    if (strncmp(line, cCL, 15) == 0)
+    uint64_t * cl_p1 = (uint64_t *)line;
+    uint32_t * cl_p2 = (uint32_t *)(line+8);
+    
+    if ((*cl_p1 == 0x2d746e65746e6f43) && (*cl_p2 == 0x676e654c))
     {
         char * p2 = line + 15;
         while (((*p2 < '0') || (*p2 > '9')) && (*p2 != 0))
@@ -188,8 +200,7 @@ int ssl_connect(ConnectionRec * cr, char * address)
     
     SSL_set_mode(cr->conn, SSL_MODE_AUTO_RETRY);
     
-    int ssl_connect_res = SSL_connect(cr->conn);
-    if (ssl_connect_res != 1)
+    if (SSL_connect(cr->conn) != 1)
         return 1;
         
     return 0;
@@ -197,14 +208,7 @@ int ssl_connect(ConnectionRec * cr, char * address)
 
 int ssl_send_request(ConnectionRec * cr)
 {
-    stringstream ss;
-    ss << "GET /api/v2/public/get_order_book?instrument_name=BTC-PERPETUAL HTTP/1.1\r\n"
-       << "Host: test.deribit.com\r\n"
-       << "Accept: application/json\r\n"
-       << "\r\n\r\n";
-    string request = ss.str();
-    
-    if (SSL_write(cr->conn, request.c_str(), request.length()) != (int)request.length()) {
+    if (SSL_write(cr->conn, /*request.c_str()*/ cRequest, cRequestLen) != cRequestLen) {
         cout << "Error sending request." << endl;
         return 1;
     }
@@ -229,4 +233,11 @@ void ssl_shutdown(ConnectionRec * cr)
 {
     SSL_shutdown(cr->conn);
     delete cr;
+}
+
+void init_strings()
+{
+    cRequestLen = strlen((char *)cRequest);
+    cCL1 = *(uint64_t *)&cCL1;
+    cCL2 = *(uint32_t *)&cCL1;
 }
